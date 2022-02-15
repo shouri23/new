@@ -1,0 +1,50 @@
+/*@!Encoding:1252*/
+includes
+{
+  
+}
+
+variables
+{
+  message 0x100 testermsg;
+  timer testerpresent; //timer is used to tell ecu alive for dignostic ($3E seriveid)
+}
+
+on start
+{
+  write("tester:start");
+write("tester:pres t-extend diagnostic");
+testermsg.dlc=8;
+}
+void init_frame()
+{
+  int i;
+  for(i=0;i<8;i++)
+   testermsg.byte(i)=0xff;//pull to vtg 0volt (all ones 0xff means resessive)
+}
+on timer testerpresent
+{
+  setTimer(testerpresent,4); 
+  write("tester:request to move extend diagnostic");
+  init_frame();
+  testermsg.byte(0)=0x2;
+  testermsg.byte(1)=0x3E;
+  testermsg.byte(2)=0x00;
+  output(testermsg);
+  //setTimer(testerpresent,4);
+}
+on key 't'
+{
+  write("tester:request to move extend diagnostic");
+  init_frame();
+  testermsg.byte(0)=0x02;//byte 0 (lower nibble is singe frame(0) and higher nibble is data length)
+  testermsg.byte(1)=0x10; //service id $10-diagnostic service
+  testermsg.byte(2)=0x03; //subfunction 03 is in diagnostic
+  //testermsg.byte(2)=0x04; //subfunction 04 is -Ve
+  output(testermsg);//transmit request frame
+  setTimer(testerpresent,4);
+}
+on key 'k'
+{
+  cancelTimer(testerpresent);
+}

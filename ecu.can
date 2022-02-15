@@ -1,0 +1,56 @@
+/*@!Encoding:1252*/
+includes
+{
+  
+}
+
+variables
+{
+  message 0x200 ECUmsg;
+  timer sessiontimer;
+}
+
+on start
+{
+  write("ecu started");
+  ECUmsg.dlc=8;
+}
+
+on message 0x100
+{
+if((this.byte(1)==0x10)&&(this.byte(2)==0x03))
+{
+  write("ECU:message receive from tester to move to differnce session");
+  ECUmsg.byte(0)=0x06; //DATA LENGTH //negative-0x4
+  ECUmsg.byte(1)=0x50; //positive responce0x50 //negative 0x7f
+  ECUmsg.byte(2)=this.byte(2);//subfunction copping //service id
+  ECUmsg.byte(3)=0x00;//timing parameter 3 ,4 (p2 server) //negative-NRC(0x12)
+  ECUmsg.byte(4)=0x14; //20msec //value can use given
+  ECUmsg.byte(5)=0x01;
+  ECUmsg.byte(6)=0xF4; //timing parameter 5,6 {p2 *server)
+  ECUmsg.byte(7)=0xFF;//500msec //always greather than p2 server
+  output(ECUmsg);
+}
+  else if(this.byte(1)==0x04)
+   {
+   ECUmsg.byte(0)=0x04; //negative-0x4
+  ECUmsg.byte(1)=0x7f;  //negative 0x7f
+  ECUmsg.byte(2)=0x10;//service id
+  ECUmsg.byte(3)=0x12;//negative-NRC(0x12)
+  output(ECUmsg);
+  }
+else if((this.byte(1)==0x3E))
+{
+  write("ECU:tester present");
+  setTimer(sessiontimer,5);
+  ECUmsg.byte(0)=0x02;//type frame(lower nibble) and data length(higher nibble)
+  ECUmsg.byte(1)=0x7E;
+  ECUmsg.byte(2)=this.byte(2);
+  output(ECUmsg);
+  
+}
+}
+on timer sessiontimer
+{
+  write("ECUis moving to default session");
+}
