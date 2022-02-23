@@ -1,0 +1,33 @@
+/*@!Encoding:1252*/
+includes
+{
+  
+}
+
+variables
+{
+  message 0x200 Rxmsg1;
+  int datasize;
+  int recbytes;
+}
+on start
+{
+write("rx:started");  
+Rxmsg1.dlc=8;
+ // datasize=0;
+  recbytes=0;
+}
+on message 0x100
+{
+ if(this.byte(0)==0x10)
+{
+  write("rx:msg from tx node");
+  datasize=((this.byte(0))<<8|(this.byte(1)));
+  write("rx:datasize=%x",datasize);
+  write("received first 6 byte of data");
+  Rxmsg1.byte(0)=0x30;  //flow control byte(0)=30 is continous transmission
+  Rxmsg1.byte(1)=0x00; //block size
+   Rxmsg1.byte(2)=0x00;//sepration time
+  output(Rxmsg1);
+}
+}
